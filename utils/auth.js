@@ -83,7 +83,6 @@ const loginUser = async (reqBody, res) => {
   const {username, password} = reqBody
   try {
     const hasUser = await validateUsername(username)
-    console.log(hasUser)
     // verify whether there is user
     if (!hasUser) {
       return res.status(400).json({message: 'username wrong, please check'})

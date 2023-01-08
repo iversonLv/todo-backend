@@ -13,7 +13,6 @@ const checkTokenSetUser = (req, res, next) => {
           res.status(400).json({message: err.message})
         } 
         req.decoded = decoded
-        console.log(req.decoded)
         // Check whether there is the user
         const user = await User.findById({_id: req.decoded._id})
         if (!user) {
