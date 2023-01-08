@@ -1,0 +1,285 @@
+swagger: "2.0"
+info:
+  description: Todo app fullstack backend swagger file
+  version: "1.0.0"
+  title: "Todo app fullstack REST API"
+  contact:
+    email: "iverson_3_3_3@126.com"
+# license goes here if any
+# during dev, should point to your local machine
+host: "localhost:5000"
+# basePath prefixes all resource paths 
+basePath: "/api/v1"
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+tags:
+- name: "Auth"
+  description: "For signup(admin), signup, login, me(current logined account)"
+- name: "Info"
+  description: "For admin that get topOne, topTen, users data for front-end dashboard page"
+- name: "Todo"
+  description: "For todos infos, CRUD todo, complete all todos, delete all todos"
+paths:
+  /auth/signup/admin:
+    post:
+      tags:
+        - "Auth"
+      summary: "Sign up admin"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User object that needs to be added to the database"
+        schema:
+          type: object
+          properties:
+            username:
+              type: string
+              pattern: '/(^[a-zA-Z0-9_]*$)/'
+              minLength: 2
+              maxLength: 30
+              uniqueItems: true
+            password:
+              type: string
+              format: password
+              minLength: 10
+          required:
+          - username
+          - password
+      responses:
+        200:
+          description: "Successful - Generate the token."
+          schema:
+            $ref: "#/definitions/Response"
+        400: 
+          description: "Bad Request - Request `body` input validate error"
+          schema:
+            $ref: "#/definitions/Response"
+        403:
+          description: "Forbidden - Could not create user"
+          schema:
+            $ref: "#/definitions/Response"
+        409:
+          description: "Conflict - The `username` has been taken"
+          schema:
+            $ref: "#/definitions/Response"
+  /auth/login:
+    post:
+      tags:
+        - "Auth"
+      summary: "Login"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User login with credential"
+        schema:
+          type: object
+          properties:
+            username:
+              type: string
+            password:
+              type: string
+              format: password
+          required:
+            - username
+            - password
+      responses:
+        200:
+          description: "Successful - Generate the token."
+          schema:
+            $ref: "#/definitions/Response"
+        400: 
+          description: "Bad Request - Request `body` input validate error"
+          schema:
+            $ref: "#/definitions/Response"
+        403:
+          description: "Forbidden - "
+          schema:
+            $ref: "#/definitions/Response"
+  /info/topOne:
+    get:
+      tags:
+      - "Info"
+      security:
+        - Bearer: []
+      summary: "Admin get the topOne user data(username, avatar, todoLength, totalComplete, totalInComplete, todos, categories)"
+      responses:
+        200:
+          description: "Successful - Admin get the topOne user data"
+          schema:
+            $ref: "#/definitions/Response"
+        401: 
+          description: "Error: Unauthorized"
+  /info/topTen:
+    get:
+      tags:
+      - "Info"
+      security:
+        - Bearer: []
+      summary: "Admin get the topTen user data(username, avatar, todoLength, totalComplete, totalInComplete, todos, categories)"
+      parameters:
+      - in: "query"
+        name: "after"
+        type: string
+        format: date-time
+        description: "Admin get the topTen user data base on after date"
+      - in: "query"
+        name: "before"
+        type: string
+        format: date-time
+        description: "Admin get the topTen user data base on before date"
+      responses:
+        200:
+          description: "Successful - Admin get the topTen user data"
+          schema:
+            $ref: "#/definitions/Response"
+        401: 
+          description: "Error: Unauthorized"
+      
+securityDefinitions:
+  Bearer:
+    in: header
+    type: apiKey
+    name: Authorization
+
+definitions:
+  User:
+    type: "object"
+    required:
+    - username
+    - password
+    properties:
+      username:
+        type: string
+        pattern: '/(^[a-zA-Z0-9_]*$)/'
+        minLength: 2
+        maxLength: 30
+        uniqueItems: true
+      password:
+        type: string
+        format: password
+        minLength: 10
+      avatar:
+        type: string
+      roles:
+        type: string
+        default: 'user'
+        enum: ['user','admin']
+      categories:
+        type: array
+        items:
+          $ref: "#/definitions/Categories"
+      todos:
+        type: array
+        items:
+          $ref: "#/definitions/Todos"
+      createdOn:
+        type: string
+        format: date-time
+        readOnly: true
+        default: Date.now
+      updatedOn:
+        type: string
+        format: date-time
+        readOnly: true
+        example: '2020-10-08T14:09:38.946Z'
+        default: Date.now
+      createdBy:
+        $ref: "#/definitions/User"
+      updatedBy:
+        $ref: "#/definitions/User"
+  Categories:
+    type: "object"
+    required:
+    - title
+    properties:
+      title:
+        type: string
+        maxLength: 100
+      color:
+        type: string
+      todos:
+        type: array
+        items:
+          $ref: "#/definitions/Todos"
+      createdOn:
+        type: string
+        format: date-time
+        readOnly: true
+        default: Date.now
+      updatedOn:
+        type: string
+        format: date-time
+        readOnly: true
+        example: '2020-10-08T14:09:38.946Z'
+        default: Date.now
+      createdBy:
+        $ref: "#/definitions/User"
+      updatedBy:
+        $ref: "#/definitions/User"
+    
+  Todos:
+    type: "object"
+    required:
+    - title
+    - start
+    - end
+    - category
+    - isComplete
+    properties:
+      title:
+        type: string
+        maxLength: 100
+      notes:
+        type: string
+        maxLength: 100
+      start:
+        type: string
+        format: date-time
+        default: Date.now
+      end:
+        type: string
+        format: date-time
+        default: Date.now
+      category:
+        type: string
+      isImportant:
+        type: boolean
+        format: Boolean
+        default: false
+      isComplete:
+        type: boolean
+        format: Boolean
+        default: false
+      createdOn:
+        type: string
+        format: date-time
+        readOnly: true
+        default: Date.now
+      updatedOn:
+        type: string
+        format: date-time
+        readOnly: true
+        example: '2020-10-08T14:09:38.946Z'
+        default: Date.now
+      createdBy:
+        $ref: "#/definitions/User"
+      updatedBy:
+        $ref: "#/definitions/User"
+        
+      
+
+    
+  Response:
+    type: "object"
+    properties:
+      message:
+        type: "string"
+        description: "Error description"

@@ -1,0 +1,40 @@
+{
+  "name": "todo-backend",
+  "version": "1.0.0",
+  "description": "This is for full stack todo app backend with nodejs, express, mongodb",
+  "main": "index.js",
+  "engines": {
+    "node": "12.14.1",
+    "npm": "6.13.4"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test-data": "node test-data.js || true"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.4",
+    "date-fns": "^2.29.3",
+    "dotenv": "^6.0.0",
+    "express": "^4.16.3",
+    "joi": "^13.5.2",
+    "jsonwebtoken": "^8.3.0",
+    "mongoose": "^5.10.0",
+    "multer": "^1.4.2",
+    "swagger-ui-express": "^4.1.4",
+    "uuid": "^9.0.0",
+    "volleyball": "^1.5.0",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "moment": "^2.29.1",
+    "moment-random": "^1.1.0",
+    "monk": "^6.0.6",
+    "nodemon": "^1.18.3"
+  }
+}
