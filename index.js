@@ -11,7 +11,7 @@ const { logger } = require('./middlewares/logger')
 
 // localhost cors problem
 const cors = require('cors')
-// app.use(cors())
+app.use(cors())
 const volleyball = require('volleyball') // or morgan
 
 // db
