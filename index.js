@@ -11,7 +11,6 @@ const { logger } = require('./middlewares/logger')
 
 // localhost cors problem
 const cors = require('cors')
-app.use(cors())
 const volleyball = require('volleyball') // or morgan
 
 // db
@@ -34,6 +33,7 @@ mongoose.connect(`${process.env.DB_URI}`, { useNewUrlParser: true, useCreateInde
 
 
 const app = express()
+app.use(cors())
 
 app.use(logger)
 
