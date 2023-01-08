@@ -19,7 +19,7 @@ api url is /api/v1/
 | User  | CURD its own todos, CRUD its own categories, UR its own profile           |
 
 ## Config the env
-
+Please check .env_sample for more detail
 | Keys | Values                                                               | Examples |
 |-------|---------------------------------------------------------------------------|---|
 | TOKEN_SECRET | jwt secret | sdfwedfabcgefgwwdfdsfsdfscvsdsf |
