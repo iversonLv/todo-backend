@@ -39,7 +39,13 @@ app.use(logger)
 
 // setup swagger UI
 const swaggerDocument = YAML.load(path.join(__dirname, './docs/swagger.yaml'))
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+app.use('/docs', (req, res, next) => {
+  const p = port ? `:${port}` : ''
+  swaggerDocument.host = req.hostname + p;
+  swaggerDocument.schemes = [req.protocol]
+  req.swaggerDoc = swaggerDocument;
+  next();
+}, swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 app.use(volleyball) // For dev debug to show message at console
 app.use(cors())
