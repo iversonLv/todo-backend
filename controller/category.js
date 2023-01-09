@@ -90,12 +90,13 @@ const getCategory = async (req, res) => {
 // Update category
 const updateCategory = async (req, res) => {
   const id = req.decoded._id
-  const updateCategory = {
-    ...req.body,
-    updatedOn: (new Date()).toLocaleString(), // toLocalString() 将 greenwich timezone change to local timezone
-    updatedBy: id,
-  }
   try {
+    await categorySchema.validate(req.body)
+    const updateCategory = {
+      ...req.body,
+      updatedOn: (new Date()).toLocaleString(), // toLocalString() 将 greenwich timezone change to local timezone
+      updatedBy: id,
+    }
     // { $set: updateCategory} only update the corresponding field from ...req.body and map the modified date and person
     // { createdOn, createdBy } won't be change
     const cateogry = await Category.findOneAndUpdate({_id: req.params.id, createdBy: id}, { $set: updateCategory}, { new: true }).populate('updatedBy', 'username')
