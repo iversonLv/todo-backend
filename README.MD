@@ -19,6 +19,7 @@ api url is /api/v1/
 | User  | CURD its own todos, CRUD its own categories, UR its own profile           |
 
 ## Config the env
+
 Please check .env_sample for more detail
 | Keys | Values                                                               | Examples |
 |-------|---------------------------------------------------------------------------|---|
@@ -39,6 +40,7 @@ Please check .env_sample for more detail
 It will generate some test users with their todos and categories
 
 ## HTTP Code
+
 | Codes | Purposes | Examples |
 |-------|--|---------------------------------------------------------------------------|
 |200|Ok, update, delete a resource|
