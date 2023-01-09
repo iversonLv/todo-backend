@@ -11,7 +11,7 @@ const todoCriteriaSchema = Joi.object({
   before: Joi.date().iso().min(Joi.ref('after')),
   page: Joi.number().integer().min(1),
   perPage: Joi.number().integer().min(1),
-  sortBy: Joi.string().valid('createdOn','start', 'end', 'category'),
+  sortBy: Joi.string().valid('createdOn','start', 'end'),
   sortOrder: Joi.string().valid('asc', 'desc', 'ASC', 'DESC'),
   isComplete: Joi.boolean(),
   category: Joi.string(),
