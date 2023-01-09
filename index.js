@@ -40,9 +40,10 @@ app.use(logger)
 // setup swagger UI
 const swaggerDocument = YAML.load(path.join(__dirname, './docs/swagger.yaml'))
 app.use('/docs', (req, res, next) => {
-  const p = port ? `:${port}` : ''
+  const p = req.hostname.includes('localhost') ? `:${port}` : ''
   swaggerDocument.host = req.hostname + p;
   swaggerDocument.schemes = [req.protocol]
+  console.log(req.protocol)
   req.swaggerDoc = swaggerDocument;
   next();
 }, swaggerUi.serve, swaggerUi.setup(swaggerDocument))
