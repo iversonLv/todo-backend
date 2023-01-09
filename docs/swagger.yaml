@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
   description: Todo app fullstack backend swagger file
-  version: "1.0.0"
+  version: "2.0.0"
   title: "Todo app fullstack REST API"
   contact:
     email: "iverson_3_3_3@126.com"
@@ -24,6 +24,8 @@ tags:
   description: "For signup(admin), signup, login, me(current logined account)"
 - name: "Info"
   description: "For admin that get topOne, topTen, users data for front-end dashboard page"
+- name: "Category"
+  description: "For categories, CRUD category"
 - name: "Todo"
   description: "For todos infos, CRUD todo, complete all todos, delete all todos"
 paths:
@@ -31,7 +33,7 @@ paths:
     post:
       tags:
         - "Auth"
-      summary: "Sign up admin"
+      summary: "Admin signup"
       parameters:
       - in: "body"
         name: "body"
@@ -66,7 +68,49 @@ paths:
           schema:
             $ref: "#/definitions/Response"
         409:
-          description: "Conflict - The `username` has been taken"
+          description: "Conflict - The username has been taken"
+          schema:
+            $ref: "#/definitions/Response"
+  /auth/signup:
+    post:
+      tags:
+        - "Auth"
+      summary: "User signup"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User object that needs to be added to the database"
+        schema:
+          type: object
+          properties:
+            username:
+              type: string
+              pattern: '/(^[a-zA-Z0-9_]*$)/'
+              minLength: 2
+              maxLength: 30
+              uniqueItems: true
+            password:
+              type: string
+              format: password
+              minLength: 10
+          required:
+          - username
+          - password
+      responses:
+        200:
+          description: "Successful - Generate the token."
+          schema:
+            $ref: "#/definitions/loginSignUpResponse"
+        400: 
+          description: "Bad Request - Request `body` input validate error"
+          schema:
+            $ref: "#/definitions/Response"
+        403:
+          description: "Forbidden - Could not create user"
+          schema:
+            $ref: "#/definitions/Response"
+        409:
+          description: "Conflict - The username has been taken"
           schema:
             $ref: "#/definitions/Response"
   /auth/login:
@@ -95,13 +139,103 @@ paths:
           schema:
             $ref: "#/definitions/Response"
         400: 
-          description: "Bad Request - Request `body` input validate error"
+          description: "Bad Request"
           schema:
             $ref: "#/definitions/Response"
         403:
-          description: "Forbidden - "
+          description: "No-Authorization, only for admin"
           schema:
             $ref: "#/definitions/Response"
+  /auth/user/{userId}:
+    delete:
+      tags:
+        - "Auth"
+      summary: "Admin delete user"
+      security:
+        - Bearer: []
+      parameters:
+        - in: "path"
+          name: userId
+          description: "User ObjectId"
+          type: string
+          required: true
+      responses:
+        200:
+          description: "\"{username}\" has been deleted, nor its todos and categories"
+          schema:
+            $ref: "#/definitions/Response"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        401: 
+          description: "Error: Unauthorized"
+          schema:
+            $ref: "#/definitions/Response"
+        403:
+          description: "No-Authorization, only for admin"
+          schema:
+            $ref: "#/definitions/Response"
+        404:
+          description: "No such user"
+          schema:
+            $ref: "#/definitions/Response"
+  /auth/me:
+    get:
+      tags:
+        - "Auth"
+      security:
+        - Bearer: []
+      summary: "Login user get its info"
+      responses:
+        200:
+          description: "Successful - Login user get its info"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+    put:
+      tags:
+      - "Auth"
+      security:
+        - Bearer: []
+      summary: "Login user update its info"
+      consumes:
+         - multipart/form-data
+      parameters:
+        - in: "formData"
+          name: avatar
+          type: file
+          description: "User avatar"
+        - in: "formData"
+          name: "username"
+          description: "User object that needs to be update to the database"
+          type: string
+          minLength: 2
+          maxLength: 30
+          uniqueItems: true
+          required: true
+        - in: "formData"
+          name: "password"
+          type: string
+          format: password
+          minLength: 10
+          required: true
+        - in: "formData"
+          name: "currentpassword"
+          type: string
+          format: password
+          minLength: 10
+          required: true
+          
+      responses:
+        200:
+          description: "Successful - Login user get its info"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+      
   /info/topOne:
     get:
       tags:
@@ -112,10 +246,16 @@ paths:
       responses:
         200:
           description: "Successful - Admin get the topOne user data"
+        400: 
+          description: "Bad Request"
           schema:
             $ref: "#/definitions/Response"
         401: 
           description: "Error: Unauthorized"
+        404:
+          description: "Not found - No such user(Admin)"
+          schema:
+            $ref: "#/definitions/Response"
   /info/topTen:
     get:
       tags:
@@ -124,6 +264,32 @@ paths:
         - Bearer: []
       summary: "Admin get the topTen user data(username, avatar, todoLength, totalComplete, totalInComplete, todos, categories)"
       parameters:
+      - in: "query"
+        name: "perPage"
+        type: number
+        description: "TopTem user data pagination show num per page"
+      - in: "query"
+        name: "page"
+        type: number
+        description: "TopTem user data pagination show page num"
+      - in: "query"
+        name: "sortOrder"
+        type: string
+        enum: [asc, desc, ASC, DESC]
+        description: "TopTen user data sort order of todos rather than user"
+      - in: "query"
+        name: "sortBy"
+        type: string
+        enum: [createdOn, start, end]
+        description: "TopTen user data sort by of todos fields"
+      - in: "query"
+        name: "category"
+        type: string
+        description: "Filter TopTen user data base on on category"
+      - in: "query"
+        name: "isComplete"
+        type: boolean
+        description: "Filter TopTen user data is completed or not"
       - in: "query"
         name: "after"
         type: string
@@ -137,11 +303,465 @@ paths:
       responses:
         200:
           description: "Successful - Admin get the topTen user data"
+        400: 
+          description: "Bad Request"
           schema:
             $ref: "#/definitions/Response"
         401: 
           description: "Error: Unauthorized"
-      
+        404:
+          description: "Not found - No such user(Admin)"
+          schema:
+            $ref: "#/definitions/Response"
+  /info/users:
+    get:
+      tags:
+      - "Info"
+      security:
+        - Bearer: []
+      summary: "Admin get the user includes normal users and admin users and admin users exclude current login admin"
+      responses:
+        200:
+          description: "Successful - Admin get the topTen user data"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        401: 
+          description: "Error: Unauthorized"
+        404:
+          description: "Not found - No such user(Admin)"
+          schema:
+            $ref: "#/definitions/Response"
+  /todos/infos:
+    get:
+      tags:
+      - "Info"
+      security:
+        - Bearer: []
+      summary: "Admin/User get the todos infos, total and total complete and in complete length"
+      parameters:
+      - in: "query"
+        name: "isComplete"
+        type: boolean
+        description: "Filter todos infos length is completed or not"
+      - in: "query"
+        name: "after"
+        type: string
+        format: date-time
+        description: "todos infos length base on after date"
+      - in: "query"
+        name: "before"
+        type: string
+        format: date-time
+        description: "todos infos length base on before date"
+      responses:
+        200:
+          description: "Successful -Get the todos infos length data"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        401: 
+          description: "Error: Unauthorized"
+        404:
+          description: "Not found - No such user"
+          schema:
+            $ref: "#/definitions/Response"
+  /categories:
+    post:
+      tags:
+       - "Category"
+      security:
+        - Bearer: []
+      summary: "User create a category"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Category object that needs to be added to the database"
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                maxLength: 100
+              color:
+                type: string
+            required:
+            - title
+            - color
+      responses:
+        200:
+          description: "Successful - Create the category"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        404:
+          description: "Not found - No such user"
+          schema:
+            $ref: "#/definitions/Response"
+    get:
+      tags:
+      - "Category"
+      security:
+        - Bearer: []
+      summary: "User get all cateogries of the logined user"
+      responses:
+        200:
+          description: "Successful - Get all categories of the logined user"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        404:
+          description: "Not found - No such user"
+          schema:
+            $ref: "#/definitions/Response"
+  /categories/{categoryId}:
+    get:
+      tags:
+      - "Category"
+      security:
+        - Bearer: []
+      summary: "User get specific category"
+      parameters:
+        - in: "path"
+          name: categoryId
+          description: "Category ObjectId"
+          type: string
+          required: true
+      responses:
+        201:
+          description: "Successful - User create the category"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        404:
+          description: "Not found - No such user|category"
+          schema:
+            $ref: "#/definitions/Response"
+    put:
+      tags:
+      - "Category"
+      security:
+        - Bearer: []
+      summary: "User update specific category"
+      parameters:
+        - in: "path"
+          name: categoryId
+          description: "Category ObjectId"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Category object that needs to be update to the database"
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                maxLength: 100
+              color:
+                type: string
+            required:
+            - title
+            - color
+      responses:
+        200:
+          description: "Successful - User get specific category"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        404:
+          description: "Not found - No such user|category"
+          schema:
+            $ref: "#/definitions/Response"
+    delete:
+      tags:
+      - "Category"
+      security:
+        - Bearer: []
+      summary: "User delete specific category"
+      parameters:
+        - in: "path"
+          name: categoryId
+          description: "Category ObjectId"
+          type: string
+          required: true
+      responses:
+        200:
+          description: "Successful - User delete specific category"
+          schema:
+            $ref: "#/definitions/Response"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        404:
+          description: "Not found - No such user|category"
+          schema:
+            $ref: "#/definitions/Response"
+  
+  /todos:
+    post:
+      tags:
+       - "Todo"
+      security:
+        - Bearer: []
+      summary: "User create a todo"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "todo object that needs to be added to the database"
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                maxLength: 100
+              start:
+                type: string
+                format: date-time
+                default: Date.now
+              end:
+                type: string
+                format: date-time
+                default: Date.now
+              category:
+                type: string
+              notes:
+                type: string
+                maxLength: 100
+              isImportant:
+                type: boolean
+                default: false
+              isComplete:
+                type: boolean
+                default: false
+            required:
+            - title
+            - start
+            - end
+            - cateogry
+      responses:
+        200:
+          description: "Successful - Create the todo"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        404:
+          description: "Not found - No such user|category"
+          schema:
+            $ref: "#/definitions/Response"
+    get:
+      tags:
+      - "Todo"
+      security:
+        - Bearer: []
+      summary: "User get all todos of the logined user"
+      parameters:
+        - in: "query"
+          name: "page"
+          type: number
+          description: "All todo data pagination show page num"
+        - in: "query"
+          name: "perPage"
+          type: number
+          description: "All todo data pagination show num per page"
+        - in: "query"
+          name: "sortOrder"
+          type: string
+          enum: [asc, desc]
+          description: "All todo data sort order of todos"
+        - in: "query"
+          name: "sortBy"
+          type: string
+          enum: [createdOn, start, end, title, isComplete, isImportant, category, notes ]
+          description: "All todo data sort by besed on todos fields"
+        - in: "query"
+          name: "q"
+          type: string
+          description: "search title base on the regex"
+        - in: "query"
+          name: "isComplete"
+          type: boolean
+          description: "Filter todos data is completed or not"
+        - in: "query"
+          name: "filterPieChartCategory"
+          type: string
+          description: "Exclude todos data base on on category ObjectId: 63b93b8877f7014f80159330,63b93b8877f7014f80159331"
+        - in: "query"
+          name: "isImportant"
+          type: boolean
+          description: "Filter todos data is completed or not"
+        - in: "query"
+          name: "after"
+          type: string
+          format: date-time
+          description: "todos data base on after date"
+        - in: "query"
+          name: "before"
+          type: string
+          format: date-time
+          description: "todos data base on before date"
+      responses:
+        200:
+          description: "Successful - Get all categories of the logined user"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        404:
+          description: "Not found - No such user"
+          schema:
+            $ref: "#/definitions/Response"
+  /todos/{todoId}:
+    get:
+      tags:
+      - "Todo"
+      security:
+        - Bearer: []
+      summary: "User get specific todo"
+      parameters:
+        - in: "path"
+          name: todoId
+          description: "Todo ObjectId"
+          type: string
+          required: true
+      responses:
+        201:
+          description: "Successful - User create the todo"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        404:
+          description: "Not found - No such user|todo"
+          schema:
+            $ref: "#/definitions/Response"
+    put:
+      tags:
+      - "Todo"
+      security:
+        - Bearer: []
+      summary: "User update specific todo"
+      parameters:
+        - in: "path"
+          name: todoId
+          description: "Todo ObjectId"
+          type: string
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Todo object that needs to be update to the database"
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                maxLength: 100
+              start:
+                type: string
+                format: date-time
+                default: Date.now
+              end:
+                type: string
+                format: date-time
+                default: Date.now
+              category:
+                type: string
+              notes:
+                type: string
+                maxLength: 100
+              isImportant:
+                type: boolean
+                default: false
+              isComplete:
+                type: boolean
+                default: false
+            required:
+            - title
+            - start
+            - end
+            - cateogry
+      responses:
+        200:
+          description: "Successful - User get specific category"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        404:
+          description: "Not found - No such user|todo|category"
+          schema:
+            $ref: "#/definitions/Response"
+    delete:
+      tags:
+      - "Todo"
+      security:
+        - Bearer: []
+      summary: "User delete specific todo"
+      parameters:
+        - in: "path"
+          name: todoId
+          description: "Todo ObjectId"
+          type: string
+          required: true
+      responses:
+        200:
+          description: "Successful - User delete specific todo"
+          schema:
+            $ref: "#/definitions/Response"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        404:
+          description: "Not found - No such user|todo"
+          schema:
+            $ref: "#/definitions/Response"
+  
+  /todos/completeAllTodos:
+    post:
+      tags:
+      - "Todo"
+      security:
+      - Bearer: []
+      summary: "User set all its todos as complete"
+      responses:
+        200:
+          description: "Successful - User set all its todos as complete"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        404:
+          description: "Not found - No such user"
+          schema:
+            $ref: "#/definitions/Response"
+  /todos/deleteAllTodos:
+    post:
+      tags:
+      - "Todo"
+      security:
+        - Bearer: []
+      summary: "User delete all its todos"
+      responses:
+        200:
+          description: "Successful - User delete all its todos"
+        400: 
+          description: "Bad Request"
+          schema:
+            $ref: "#/definitions/Response"
+        404:
+          description: "Not found - No such user"
+          schema:
+            $ref: "#/definitions/Response"
+
 securityDefinitions:
   Bearer:
     in: header
@@ -231,14 +851,13 @@ definitions:
     - start
     - end
     - category
-    - isComplete
     properties:
       title:
         type: string
         maxLength: 100
       notes:
         type: string
-        maxLength: 100
+        maxLength: 200
       start:
         type: string
         format: date-time
@@ -259,7 +878,7 @@ definitions:
         default: false
       createdOn:
         type: string
-        format: date-time
+        format: string
         readOnly: true
         default: Date.now
       updatedOn:
@@ -274,11 +893,16 @@ definitions:
         $ref: "#/definitions/User"
         
       
-
+  loginSignUpResponse:
+    type: "object"
+    properties:
+      token:
+        type: "string"
+        description: "After login or signup will generate token"
     
   Response:
     type: "object"
     properties:
       message:
         type: "string"
-        description: "Error description"
+        description: " "
