@@ -130,7 +130,6 @@ const getAlltodos = async (req, res) => {
   const queryParamsObj = await queryParamsShared(totalCount, page, perPage, sortOrder)
   req.query = { ...queryParamsObj, sortBy }
   filterPieChartCategory = filterPieChartCategory !== undefined ? filterPieChartCategory.split(',') : null;
-  console.log(filter)
   try {
     const todos = await Todo.find(
         {
