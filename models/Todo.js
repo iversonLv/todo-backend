@@ -6,10 +6,10 @@ const TodoSchema = new Schema({
   start: { type: Date, required: true, default: Date.now},
   end: { type: Date, required: true, default: Date.now},
   category: { type: Schema.Types.ObjectId, ref: 'Category'},
-  notes: { type: String, maxlength: 200 },
+  notes: { type: String, maxlength: 200, default: '' },
   // category: { type: String, required: true, default: 'Daily life', enum: ['Daily life', 'Work', 'Entertaiment']},
   isComplete: {type: Boolean, required: true, default: false},
-  isImportant: {type: Boolean, default: false},
+  isImportant: {type: Boolean, required: true, default: false},
   createdBy: { type: Schema.Types.ObjectId, ref: 'User'},
   updatedBy: { type: Schema.Types.ObjectId, ref: 'User'},
 }, { timestamps: { createdAt: 'createdOn', updatedAt: 'updatedOn' } }
