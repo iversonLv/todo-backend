@@ -41,9 +41,10 @@ app.use(logger)
 const swaggerDocument = YAML.load(path.join(__dirname, './docs/swagger.yaml'))
 app.use('/docs', (req, res, next) => {
   const p = req.hostname.includes('localhost') ? `:${port}` : ''
+  const protocol = req.hostname.includes('localhost') ? 'http' : 'https'
   swaggerDocument.host = req.hostname + p;
-  swaggerDocument.schemes = [req.protocol]
-  console.log(req.protocol)
+  // TODO: req.protocol seems always show http though the app is hosted to https
+  swaggerDocument.schemes = [protocol]
   req.swaggerDoc = swaggerDocument;
   next();
 }, swaggerUi.serve, swaggerUi.setup(swaggerDocument))
