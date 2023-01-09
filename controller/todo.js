@@ -15,7 +15,9 @@ const todoSchema = Joi.object({
   start: Joi.date().required(),
   end: Joi.date().required(),
   category: Joi.string().required(),
-  notes: Joi.string().trim().max(200)
+  notes: Joi.string().trim().max(200),
+  isComplete: Joi.boolean(),
+  isImportant: Joi.boolean(),
   // .valid('Daily life', 'Work', 'Entertaiment') does not work
 })
 
@@ -91,7 +93,7 @@ const getAlltodos = async (req, res) => {
   // limit, show per page
   // skip skip N show N+1
   // sort asc, desc, ascending, descending, 1, and -1.
-  let { perPage, sortBy = 'createdOn', sortOrder = 'desc', page = 1, isComplete, q, filterPieChartCategory, isImportant } = req.query
+  let { perPage, sortBy = 'createdOn', sortOrder = 'desc', page = 1, isComplete, q, filterPieChartCategory, isImportant, before, after } = req.query
 
   // search function
   const escapeRegex = (text) => {
@@ -105,11 +107,30 @@ const getAlltodos = async (req, res) => {
   // filter isComplete or not
   isComplete = isComplete === undefined || isComplete === '' ? '' : {isComplete}
   isImportant = isImportant === undefined || isImportant === '' ? '' : {isImportant}
+
+
+
   const filter = {createdBy: id, ...isComplete, ...isImportant, title: regex}
+  if (after) {
+    filter.start = { $gte: after }
+  }
+  if (before) {
+    // now start-end is  [start end), so if select date picket 2020-09-13, won't show anything, will need select 2020-09-13 to 2020-09-14
+    // so front-end show select 2020-09-13, however bacekend should fetch 2020-09-14, because some todo is between 2020-09-13T00:00 to 2020-09-13T24:00
+    // we need to [start, end] so 2020-09-13 could be show this day
+
+    const getEndDate = new Date(before).getDate()
+    const plusOneDayForEndDate = new Date(before).setDate(getEndDate + 1)
+    const returnISOdate = new Date(plusOneDayForEndDate)
+    filter.end = { $lte: returnISOdate }
+  }
+
+  
   const totalCount = await Todo.countDocuments({...filter}) // need use async or get error
   const queryParamsObj = await queryParamsShared(totalCount, page, perPage, sortOrder)
   req.query = { ...queryParamsObj, sortBy }
   filterPieChartCategory = filterPieChartCategory !== undefined ? filterPieChartCategory.split(',') : null;
+  console.log(filter)
   try {
     const todos = await Todo.find(
         {
@@ -123,7 +144,6 @@ const getAlltodos = async (req, res) => {
           sort: (queryParamsObj.sortOrder === 'asc' ? sortBy : '-' + sortBy)
         }
       ).populate('createdBy', 'username').populate('category', 'title color')
-    // const todos = await Todo.find({...filter, category: { $nin: filterPieChartCategory } }, null, {limit: parseInt(queryParamsObj.perPage), skip: (parseInt(queryParamsObj.page) - 1) * queryParamsObj.perPage, sort: (queryParamsObj.sortOrder === 'asc' ? sortBy : '-' + sortBy)}).populate('createdBy', 'username').populate('category', 'title')
     res.status(200).json({
       ...req.query,
       todos
@@ -187,13 +207,14 @@ const getTodo = async (req, res) => {
 const updateTodo = async (req, res) => {
   const id = req.decoded._id
 
-  // ES6 speard feature
-  const updateTodo = {
-    ...req.body,
-    updatedOn: (new Date()).toLocaleString(), // toLocalString() 将 greenwich timezone change to local timezone
-    updatedBy: id,
-  } 
   try {
+    await todoSchema.validate(req.body)
+    // ES6 speard feature
+    const updateTodo = {
+      ...req.body,
+      updatedOn: (new Date()).toLocaleString(), // toLocalString() 将 greenwich timezone change to local timezone
+      updatedBy: id,
+    } 
     // { $set: updateTodo} only update the corresponding field from ...req.body and map the modified date and person
     // { createdOn, createdBy } won't be change
     // first and formost, find the todo
