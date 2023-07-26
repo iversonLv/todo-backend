@@ -4,8 +4,7 @@
   "description": "This is for full stack todo app backend with nodejs, express, mongodb",
   "main": "index.js",
   "engines": {
-    "node": "12.14.1",
-    "npm": "6.13.4"
+    "node": "18.x"
   },
   "scripts": {
     "start": "node index.js",
