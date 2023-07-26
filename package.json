@@ -9,7 +9,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test-data": "node test-data.js || true"
+    "test-data": "node test-data.js || true",
+    "vercel-build": "echo hello"
   },
   "keywords": [],
   "author": "",
