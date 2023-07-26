@@ -100,5 +100,3 @@ db.once("open", () => {
   // console.log(`db connect ${process.env.DB_C}`)
   app.listen(port, () => console.log(`listening on http://localhost:${port}`));
 });
-
-export default app;
